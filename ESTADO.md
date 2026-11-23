@@ -1,8 +1,8 @@
 # Estado do projeto — Gerador de Escala 5x2
 
-Leia este arquivo antes de alterar o código. Ele descreve o que o sistema faz hoje, onde cada regra mora e o que ainda não existe.
+Leia este arquivo antes de alterar o código. Ele descreve o que o sistema faz hoje, onde cada regra mora e o que ainda não existe. Ao terminar uma mudança, atualize este arquivo no mesmo trabalho.
 
-Atualizado em 22/11/2026.
+Atualizado em 23/11/2026.
 
 ## O que é
 
@@ -10,7 +10,7 @@ Gerador de escala dos balconistas das filiais do Grupo MA, jornada 5x2. A pessoa
 
 A navegação tem três abas: Escala mensal, Referência de vendas e Histórico. A semanal continua no código (`app_pages/semanal.py`) e não entra na navegação. Não apague a semanal ao mexer na mensal.
 
-Os balconistas ainda são genéricos (`Balconista_1` …). Não há nome, matrícula, ETL nem feriado.
+O solver ainda usa `Balconista_1` … por dentro. Na tela, a lista começa em Balconista 1, Balconista 2… e a pessoa troca pelo nome. Nome vazio volta ao padrão. Não há matrícula, ETL nem feriado.
 
 ## Como rodar
 
@@ -39,11 +39,27 @@ Tudo que importa está em `escala/escala/`.
 | `app_pages/referencia.py` | Curva de vendas: um gráfico de dias úteis e outro de fim de semana. |
 | `banco.py` | SQLite da escala gravada. Sem Streamlit. O arquivo fica em `escala/escala/dados/escalas.sqlite`. |
 | `grade.py` | Tabela HTML do mês, usada na geração e no histórico. |
+| `planilha.py` | Excel da escala: capa e grade. Sem Streamlit. |
 | `datalake.py` | Lê o `DATALAKE_PROVISORIO` e calcula dia de pico, hora de pico e turno de pico. Sem Streamlit. |
 | `painel.py` | Sidebar compartilhada: filial, mínimos, pico, legendas. No mês também pede ano e mês. |
 | `modelo.py` | Tabelas de horário, cálculo dos turnos e os dois solvers CP-SAT. Sem Streamlit. |
 
-Dependências em `escala/pyproject.toml`: Streamlit 1.67, pandas 3, numpy 2, OR-Tools 9 (`ortools.sat.python.cp_model`).
+Dependências locais em `escala/pyproject.toml`: Streamlit 1.67, pandas 3, numpy 2, OR-Tools 9 (`ortools.sat.python.cp_model`), openpyxl, pyodbc, dotenv. O `pyodbc` e o `dotenv` só servem ao `BASE_HORA.py`. O deploy na nuvem usa `escala/escala/requirements.txt`, sem esses dois.
+
+Tema em `escala/.streamlit/config.toml` e uma cópia em `.streamlit/config.toml` na raiz, para o Streamlit Cloud achar o arquivo. Paleta da Droga Clara, visual claro: azul `#173989`, fundo `#F4F7FC`, vermelho `#D0261E`, folga `#DFF2E8`. A barra de cima e a barra Gerar/Salvar/Exportar são azul com botão claro. Claro e escuro do sistema usam a mesma paleta, para a tela não voltar ao tema escuro.
+
+## Repositório
+
+GitHub: https://github.com/RmtRafix/PONTO_MENSAL_OTIMO, branch `main`. O commit `6893bd6` inclui o código, o SQLite `escala/escala/dados/escalas.sqlite` e os três parquets do datalake. O `.env` não entra no git: tem senha do SQL Server e token.
+
+A chave SSH deste computador foi recusada pelo GitHub. O `origin` ficou em HTTPS, que é o login que conseguiu enviar.
+
+O deploy no Streamlit Community Cloud ainda não foi feito. A tela de login em https://share.streamlit.io pediu a conta do usuário. Quando entrar:
+
+- Repositório `RmtRafix/PONTO_MENSAL_OTIMO`, branch `main`
+- Arquivo principal `escala/escala/teste.streamlit.py`
+
+O app na nuvem lê o SQLite e os parquets do repositório. Gravação nova no Cloud não persiste depois que o processo reinicia.
 
 ## Classificação da filial
 
@@ -79,7 +95,7 @@ Os três parquets foram gerados por `escala/BASE_HORA.py`:
 - `base_grafico_hora.parquet` — dias úteis, percentil 80 de vendas e moda de colaboradores por hora.
 - `base_grafico_hora_fim_de_semana.parquet` — o mesmo, sábado e domingo juntos.
 
-Dia de pico: maior média de vendas por dia da semana, só entre os dias em que a filial abre. O 5º dia útil de cada mês fica de fora dessa média, porque o pagamento puxa o pico para a data em que ele cai. Turno de pico: turno cujo meio fica mais perto da hora de maior venda na curva desse período (dias úteis ou fim de semana), no horário do dia de pico. Dia curto continua só com T1. A referência pinta o dia em laranja e, no gráfico do período, a faixa do turno e a hora.
+Dia de pico: maior média de vendas por dia da semana, só entre os dias em que a filial abre. O 5º dia útil de cada mês fica de fora dessa média, porque o pagamento puxa o pico para a data em que ele cai. Turno de pico: turno cujo meio fica mais perto da hora de maior venda na curva desse período (dias úteis ou fim de semana), no horário do dia de pico. Dia curto continua só com T1. A referência pinta o dia de pico em vermelho e, no gráfico do período, a faixa do turno e a hora.
 
 Filial, balconistas, mínimos, ano e mês usam `persist_state="session"`. Trocar de aba não devolve esses filtros ao padrão.
 
@@ -147,15 +163,15 @@ Na loja 12, novembro de 2026, 10 balconistas e mínimo 1, as 40 escalas de segun
 
 Uma grade só. Linha = balconista. Coluna = dia 1…N. Célula curta: `T1`, `T2`, `T3` ou `F`.
 
-Cabeçalho: domingo vermelho (`#dc2626`), sábado azul (`#2563eb`), 5º dia útil roxo claro (`#e9d5ff`). O horário de cada turno continua na legenda da sidebar, porque a coluna do dia não cabe o texto `06:00 às 15:24`.
+Cabeçalho: dia de semana azul (`#173989`), sábado azul escuro (`#112B67`), domingo vermelho (`#D0261E`), 5º dia útil âmbar (`#FFF0DB`). O horário de cada turno continua na legenda da sidebar, porque a coluna do dia não cabe o texto `06:00 às 15:24`.
 
-Folga em verde (`#c6e0b4`), turno em amarelo (`#fff2cc`).
+T1 em azul bem claro (`#E6F4FB`), T2 em azul claro (`#DCE5F9`), T3 no azul fechado com texto branco, folga em verde (`#DFF2E8`). Uma legenda curta fica embaixo da grade.
 
 ## O que não fazer sem combinar
 
 - Não instalar stack nova.
 - Não transformar a preferência de fim de semana, do 5º dia útil ou do turno repetido em restrição dura. As três foram pedidas como “quando der”.
 - Não exigir T2 em todo dia. Ele não cobre abertura nem fechamento, e no domingo curto está desligado de propósito.
-- Não modelar feriado, nome de funcionário nem intervalo dentro do turno até isso ser pedido.
+- Não modelar feriado nem intervalo dentro do turno até isso ser pedido. O nome na grade é só rótulo: o solver continua em `Balconista_1` ….
 - Não apontar o mínimo de domingo acima do mínimo de segunda a sábado. A tela e o `validar_parametros` bloqueiam.
 - Não soltar o dia de pico nem o turno de pico. Os dois vêm do datalake e a tela deixa travado.

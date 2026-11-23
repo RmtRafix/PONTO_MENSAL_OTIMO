@@ -1,0 +1,12 @@
+---
+description: Manter ESTADO.md como o estado atual do projeto para o próximo agente
+alwaysApply: true
+---
+
+# ESTADO.md
+
+`ESTADO.md` na raiz é o estado do sistema. Leia antes de alterar o código.
+
+Ao terminar qualquer mudança de comportamento, arquivo, regra, tela, banco ou deploy, atualize `ESTADO.md` no mesmo trabalho. A data fica no topo. Escreva o que o sistema faz agora, não o que foi tentado.
+
+Não descreva regra do solver que você não mudou como se tivesse mudado. Não apague uma regra dura ou uma preferência sem o usuário pedir.
