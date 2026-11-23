@@ -1,0 +1,8 @@
+.env
+**/.env
+__pycache__/
+*.py[cod]
+.venv/
+.agents/
+*.xlsx
+.streamlit/secrets.toml

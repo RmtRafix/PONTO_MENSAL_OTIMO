@@ -1,0 +1,23 @@
+[project]
+name = "escala"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Rafael M. Todão",email = "107566365+RmtRafix@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "streamlit (>=1.67.0,<2.0.0)",
+    "pandas (>=3.1.1,<4.0.0)",
+    "numpy (>=2.5.5,<3.0.0)",
+    "ortools (>=9.15.6755,<10.0.0)",
+    "dotenv (>=0.9.9,<0.10.0)",
+    "pyodbc (>=5.5.0,<6.0.0)",
+    "openpyxl (>=3.1.5,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

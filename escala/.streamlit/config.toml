@@ -1,0 +1,125 @@
+# Paleta da Droga Clara. Visual claro, no jeito das telas da MOAVI.
+
+[theme]
+base = "light"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "8px"
+font = "'Figtree':https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap"
+headingFont = "'Archivo':https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&display=swap"
+codeFont = "'Figtree':https://fonts.googleapis.com/css2?family=Figtree:wght@500;600&display=swap"
+baseFontSize = 14
+baseFontWeight = 400
+codeFontSize = "13px"
+headingFontSizes = ["26px", "20px", "16px", "15px", "14px", "13px"]
+headingFontWeights = [700, 600, 600, 600, 500, 500]
+linkUnderline = false
+paddingTop = "0.75rem"
+paddingBottom = "2.5rem"
+
+[theme.light]
+primaryColor = "#173989"
+backgroundColor = "#F4F7FC"
+secondaryBackgroundColor = "#FFFFFF"
+codeBackgroundColor = "#E6F4FB"
+textColor = "#0F1C3F"
+linkColor = "#173989"
+borderColor = "#E4E4E7"
+codeTextColor = "#173989"
+greenColor = "#05553B"
+redColor = "#D0261E"
+yellowColor = "#5C3000"
+orangeColor = "#D0261E"
+blueColor = "#173989"
+violetColor = "#173989"
+grayColor = "#5B6782"
+chartCategoricalColors = [
+    "#173989",
+    "#2F6FDB",
+    "#D0261E",
+    "#05553B",
+    "#5B6782",
+    "#112B67",
+    "#8AA4D6",
+    "#C4241C",
+]
+chartSequentialColors = [
+    "#E6F4FB",
+    "#DCE5F9",
+    "#C5D4F5",
+    "#A9C0EE",
+    "#8AA4D6",
+    "#6B8BC4",
+    "#4C6FAD",
+    "#2F5596",
+    "#173989",
+    "#112B67",
+]
+dataframeBorderColor = "#E4E4E7"
+dataframeHeaderBackgroundColor = "#173989"
+dataframeHeaderTextColor = "#FFFFFF"
+
+[theme.sidebar]
+paddingTop = "0.75rem"
+paddingBottom = "1.25rem"
+
+[theme.light.sidebar]
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F7FC"
+codeBackgroundColor = "#E6F4FB"
+textColor = "#0F1C3F"
+borderColor = "#E4E4E7"
+primaryColor = "#173989"
+linkColor = "#173989"
+
+[theme.dark]
+primaryColor = "#173989"
+backgroundColor = "#F4F7FC"
+secondaryBackgroundColor = "#FFFFFF"
+codeBackgroundColor = "#E6F4FB"
+textColor = "#0F1C3F"
+linkColor = "#173989"
+borderColor = "#E4E4E7"
+codeTextColor = "#173989"
+greenColor = "#05553B"
+redColor = "#D0261E"
+yellowColor = "#5C3000"
+orangeColor = "#D0261E"
+blueColor = "#173989"
+violetColor = "#173989"
+grayColor = "#5B6782"
+chartCategoricalColors = [
+    "#173989",
+    "#2F6FDB",
+    "#D0261E",
+    "#05553B",
+    "#5B6782",
+    "#112B67",
+    "#8AA4D6",
+    "#C4241C",
+]
+chartSequentialColors = [
+    "#E6F4FB",
+    "#DCE5F9",
+    "#C5D4F5",
+    "#A9C0EE",
+    "#8AA4D6",
+    "#6B8BC4",
+    "#4C6FAD",
+    "#2F5596",
+    "#173989",
+    "#112B67",
+]
+dataframeBorderColor = "#E4E4E7"
+dataframeHeaderBackgroundColor = "#173989"
+dataframeHeaderTextColor = "#FFFFFF"
+
+[theme.dark.sidebar]
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F7FC"
+codeBackgroundColor = "#E6F4FB"
+textColor = "#0F1C3F"
+borderColor = "#E4E4E7"
+primaryColor = "#173989"
+linkColor = "#173989"
