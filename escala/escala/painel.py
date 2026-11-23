@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 import streamlit as st
 
@@ -26,6 +27,7 @@ OPCOES_TURNO = {
     "T3 (Fechamento)": "T3",
 }
 ROTULO_TURNO = {codigo: rotulo for rotulo, codigo in OPCOES_TURNO.items()}
+LOGO_DROGA_CLARA = Path(__file__).resolve().parent / "assets" / "logo_completo.png"
 
 
 @st.cache_data(show_spinner=False)
@@ -52,7 +54,7 @@ def estilo_escala(df):
 
 
 def painel_loja(mensal=False):
-    st.sidebar.caption("Grupo MA")
+    st.sidebar.image(LOGO_DROGA_CLARA, width="stretch")
     st.sidebar.header("Parâmetros da loja")
     id_loja = st.sidebar.selectbox(
         "Filial", ID_LOJA_CLASS, key="filial", persist_state="session"
@@ -153,6 +155,8 @@ def painel_loja(mensal=False):
         st.sidebar.caption("Regras extras do mês")
         st.sidebar.markdown(
             "- Entre o fim de um turno e o início do próximo, pelo menos 11 horas.\n"
+            "- No máximo duas folgas seguidas. Três dias corridos de folga não entra.\n"
+            "- O par de duas folgas seguidas fica no mínimo que a cobertura deixar.\n"
             "- A folga de fim de semana reveza quando der. Não trava a escala.\n"
             "- Domingo fechado é folga de todo mundo; a troca fica no sábado.\n"
             "- No 5º dia útil, a escala deixa o menor número possível de folgas.\n"

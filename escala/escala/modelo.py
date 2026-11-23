@@ -390,6 +390,31 @@ def gerar_escala_mensal(
                     x[(balconista, dia, turno)] + x[(balconista, seguinte, turno_seguinte)] <= 1
                 )
 
+    # No máximo duas folgas seguidas, no mês inteiro. A virada da semana também conta.
+    folga_dia = {}
+    for balconista in balconistas:
+        for dia in datas:
+            folga = model.NewBoolVar(f"folga_{balconista}_{dia.isoformat()}")
+            trabalhou = sum(x[(balconista, dia, turno)] for turno in TURNOS)
+            model.Add(folga + trabalhou == 1)
+            folga_dia[(balconista, dia)] = folga
+    for balconista in balconistas:
+        for indice in range(len(datas) - 2):
+            janela = datas[indice:indice + 3]
+            model.Add(sum(folga_dia[(balconista, dia)] for dia in janela) <= 2)
+
+    # Cada par de duas folgas seguidas entra no objetivo. Isolar a folga pesa mais que o fim de semana.
+    duas_seguidas = []
+    for balconista in balconistas:
+        for indice in range(len(datas) - 1):
+            hoje = datas[indice]
+            amanha = datas[indice + 1]
+            par = model.NewBoolVar(f"duas_folgas_{balconista}_{hoje.isoformat()}")
+            soma = folga_dia[(balconista, hoje)] + folga_dia[(balconista, amanha)]
+            model.Add(soma == 2).OnlyEnforceIf(par)
+            model.Add(soma <= 1).OnlyEnforceIf(par.Not())
+            duas_seguidas.append(par)
+
     # Folga de fim de semana é preferência. Domingo fechado fica fixo para todo mundo.
     folgas_por_pessoa = {balconista: [] for balconista in balconistas}
     rotulos_fds = []
@@ -458,6 +483,8 @@ def gerar_escala_mensal(
         objetivo -= sum(turnos_pico)
     if seguidos:
         objetivo += sum(seguidos) * 100
+    if duas_seguidas:
+        objetivo += sum(duas_seguidas) * 500
     if folgas_todas:
         # Prefere revezar a folga, sem pesar mais que o dia de pico.
         objetivo -= sum(folgas_todas) * 30
@@ -484,8 +511,8 @@ def gerar_escala_mensal(
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise ValueError(
             f"Inviável matematicamente. Com {qtd_balconistas} balconistas, "
-            "a cobertura, a escala 5x2, o dia de pico ou as 11 horas de descanso "
-            "entre um turno e o outro não fecham."
+            "a cobertura, a escala 5x2, o dia de pico, as 11 horas de descanso "
+            "ou o limite de duas folgas seguidas não fecham."
         )
 
     linhas = []

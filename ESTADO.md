@@ -41,12 +41,14 @@ Tudo que importa está em `escala/escala/`.
 | `grade.py` | Tabela HTML do mês, usada na geração e no histórico. |
 | `planilha.py` | Excel da escala: capa e grade. Sem Streamlit. |
 | `datalake.py` | Lê o `DATALAKE_PROVISORIO` e calcula dia de pico, hora de pico e turno de pico. Sem Streamlit. |
-| `painel.py` | Sidebar compartilhada: filial, mínimos, pico, legendas. No mês também pede ano e mês. |
+| `painel.py` | Sidebar compartilhada: logo da Droga Clara no topo, filial, mínimos, pico, legendas. No mês também pede ano e mês. |
 | `modelo.py` | Tabelas de horário, cálculo dos turnos e os dois solvers CP-SAT. Sem Streamlit. |
 
 Dependências locais em `escala/pyproject.toml`: Streamlit 1.67, pandas 3, numpy 2, OR-Tools 9 (`ortools.sat.python.cp_model`), openpyxl, pyodbc, dotenv. O `pyodbc` e o `dotenv` só servem ao `BASE_HORA.py`. O deploy na nuvem usa `escala/escala/requirements.txt`, sem esses dois.
 
 Tema em `escala/.streamlit/config.toml` e uma cópia em `.streamlit/config.toml` na raiz, para o Streamlit Cloud achar o arquivo. Paleta da Droga Clara, visual claro: azul `#173989`, fundo `#F4F7FC`, vermelho `#D0261E`, folga `#DFF2E8`. A barra de cima e a barra Gerar/Salvar/Exportar são azul com botão claro. Claro e escuro do sistema usam a mesma paleta, para a tela não voltar ao tema escuro.
+
+O topo da sidebar mostra `assets/logo_completo.png`. O título da página e a linha do corpo continuam com Grupo MA.
 
 ## Repositório
 
@@ -138,9 +140,11 @@ O que a semanal já faz, vale em cada semana do mês: 5x2, cobertura, dia de pic
 Só no mês:
 
 1. Descanso de 11 horas, duro. Entre o fim de um turno e o início do próximo dia têm de sobrar 11 horas. Quem sai às 22:00 não entra às 06:00. Na ADK, T3 de um dia de semana seguido de T1 no dia seguinte é proibido. Os pares saem de `pares_sem_descanso`.
-2. Fim de semana, preferência. Evita a mesma pessoa de folga em dois fins de semana seguidos e tenta revezar. Não trava a escala. Loja fechada no domingo: domingo é folga de todo mundo e a troca fica no sábado. Loja aberta: folga de fim de semana significa sábado e domingo sem trabalho.
-3. 5º dia útil do mês, preferência. Conta só segunda a sexta, sem feriado. O solver reduz a folga nesse dia ao mínimo que as regras duras permitem. Pode zerar se couber. Não é restrição dura.
-4. Mesmo turno de segunda a sexta, preferência. Dentro de cada semana, a pessoa repete T1, T2 ou T3 nos dias úteis em que trabalha. Folga no meio não conta como troca. Sábado e domingo ficam de fora. Se a cobertura ou as 11 horas impedirem, a troca continua possível.
+2. No máximo duas folgas seguidas, duro. Vale cada balconista no mês inteiro, inclusive na virada da semana. Três folgas em dias corridos é proibido. Semana cortada entra nessa conta.
+3. Duas folgas seguidas, preferência. O solver reduz a quantidade desses pares ao mínimo que as regras duras permitem. Não zera se a cobertura impedir. Sábado com domingo só fica junto quando a cobertura exige.
+4. Fim de semana, preferência. Evita a mesma pessoa de folga em dois fins de semana seguidos e tenta revezar. Não trava a escala. Loja fechada no domingo: domingo é folga de todo mundo e a troca fica no sábado. Loja aberta: folga de fim de semana significa sábado e domingo sem trabalho.
+5. 5º dia útil do mês, preferência. Conta só segunda a sexta, sem feriado. O solver reduz a folga nesse dia ao mínimo que as regras duras permitem. Pode zerar se couber. Não é restrição dura.
+6. Mesmo turno de segunda a sexta, preferência. Dentro de cada semana, a pessoa repete T1, T2 ou T3 nos dias úteis em que trabalha. Folga no meio não conta como troca. Sábado e domingo ficam de fora. Se a cobertura ou as 11 horas impedirem, a troca continua possível.
 
 Pesos do `Minimize` mensal, para não inverter a prioridade sem querer:
 
@@ -149,6 +153,7 @@ Pesos do `Minimize` mensal, para não inverter a prioridade sem querer:
 | Pessoas no dia de pico | +1000 |
 | Empate do pico com outro dia | +10 |
 | Pessoas no turno de pico | −1 |
+| Cada par de duas folgas seguidas | +500 |
 | Dois fins de semana seguidos de folga | +100 |
 | Cada folga de fim de semana | −30 |
 | Teto de folgas de fim de semana por pessoa | +5 |
@@ -161,7 +166,7 @@ Na loja 12, novembro de 2026, 10 balconistas e mínimo 1, as 40 escalas de segun
 
 ## Tela do mês
 
-Uma grade só. Linha = balconista. Coluna = dia 1…N. Célula curta: `T1`, `T2`, `T3` ou `F`.
+Uma grade só. Linha = balconista. Coluna = dia 1…N. Célula curta: `T1`, `T2`, `T3` ou `F`. A sidebar lista o teto de duas folgas seguidas e a preferência de reduzir esse par.
 
 Cabeçalho: dia de semana azul (`#173989`), sábado azul escuro (`#112B67`), domingo vermelho (`#D0261E`), 5º dia útil âmbar (`#FFF0DB`). O horário de cada turno continua na legenda da sidebar, porque a coluna do dia não cabe o texto `06:00 às 15:24`.
 
@@ -170,7 +175,7 @@ T1 em azul bem claro (`#E6F4FB`), T2 em azul claro (`#DCE5F9`), T3 no azul fecha
 ## O que não fazer sem combinar
 
 - Não instalar stack nova.
-- Não transformar a preferência de fim de semana, do 5º dia útil ou do turno repetido em restrição dura. As três foram pedidas como “quando der”.
+- Não transformar a preferência de fim de semana, do 5º dia útil, do turno repetido ou de zerar o par de duas folgas seguidas em restrição dura. Foram pedidas como “quando der”. O teto de duas folgas seguidas é que é duro.
 - Não exigir T2 em todo dia. Ele não cobre abertura nem fechamento, e no domingo curto está desligado de propósito.
 - Não modelar feriado nem intervalo dentro do turno até isso ser pedido. O nome na grade é só rótulo: o solver continua em `Balconista_1` ….
 - Não apontar o mínimo de domingo acima do mínimo de segunda a sábado. A tela e o `validar_parametros` bloqueiam.
