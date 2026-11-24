@@ -2,11 +2,11 @@
 
 Leia este arquivo antes de alterar o código. Ele descreve o que o sistema faz hoje, onde cada regra mora e o que ainda não existe. Ao terminar uma mudança, atualize este arquivo no mesmo trabalho.
 
-Atualizado em 23/11/2026.
+Atualizado em 24/11/2026.
 
 ## O que é
 
-Gerador de escala dos balconistas das filiais do Grupo MA, jornada 5x2. A pessoa trabalha 5 dias e folga 2. A presença é de 9 horas e 24 minutos, com 1 hora de intervalo dentro desse bloco. O intervalo não é posicionado pelo solver: a janela inteira é o turno.
+Gerador de escala dos balconistas das filiais da DrogaClara, jornada 5x2. A pessoa trabalha 5 dias e folga 2. A presença é de 9 horas e 24 minutos, com 1 hora de intervalo dentro desse bloco. O intervalo não é posicionado pelo solver: a janela inteira é o turno.
 
 A navegação tem três abas: Escala mensal, Referência de vendas e Histórico. A semanal continua no código (`app_pages/semanal.py`) e não entra na navegação. Não apague a semanal ao mexer na mensal.
 
@@ -48,7 +48,7 @@ Dependências locais em `escala/pyproject.toml`: Streamlit 1.67, pandas 3, numpy
 
 Tema em `escala/.streamlit/config.toml` e uma cópia em `.streamlit/config.toml` na raiz, para o Streamlit Cloud achar o arquivo. Paleta da Droga Clara, visual claro: azul `#173989`, fundo `#F4F7FC`, vermelho `#D0261E`, folga `#DFF2E8`. A barra de cima e a barra Gerar/Salvar/Exportar são azul com botão claro. Claro e escuro do sistema usam a mesma paleta, para a tela não voltar ao tema escuro.
 
-O topo da sidebar mostra `assets/logo_completo.png`. O título da página e a linha do corpo continuam com Grupo MA.
+A logo `assets/logo_completo.png` fica no topo da sidebar e na linha do corpo, ao lado de “DrogaClara · Escala dos balconistas · jornada 5x2”. O título da aba é “Escala 5x2 · DrogaClara”.
 
 ## Repositório
 

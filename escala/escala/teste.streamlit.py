@@ -1,7 +1,11 @@
+from pathlib import Path
+
 import streamlit as st
 
 
-st.set_page_config(page_title="Escala 5x2 · Grupo MA", layout="wide")
+LOGO_DROGA_CLARA = Path(__file__).resolve().parent / "assets" / "logo_completo.png"
+
+st.set_page_config(page_title="Escala 5x2 · DrogaClara", layout="wide")
 
 st.markdown(
     """
@@ -78,6 +82,8 @@ pagina = st.navigation(
     position="top",
 )
 
-st.caption("Grupo MA · Escala dos balconistas · jornada 5x2")
+marca, texto = st.columns([1, 5], vertical_alignment="center")
+marca.image(LOGO_DROGA_CLARA, width="stretch")
+texto.caption("DrogaClara · Escala dos balconistas · jornada 5x2")
 st.title(pagina.title, icon=pagina.icon)
 pagina.run()
