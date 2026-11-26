@@ -4,7 +4,8 @@ from pathlib import Path
 import streamlit as st
 
 from datalake import carregar_bases, montar_referencia
-from modelo import DIAS_SEMANA, decodificar_classificacao, legenda_letras, legenda_turnos
+from feriados import feriados_no_mes
+from modelo import DIAS_SEMANA, decodificar_classificacao, legenda_letras, legenda_turnos, semana_fraca
 
 
 ID_LOJA_CLASS = {
@@ -160,8 +161,22 @@ def painel_loja(mensal=False):
             "- A folga de fim de semana reveza quando der. Não trava a escala.\n"
             "- Domingo fechado é folga de todo mundo; a troca fica no sábado.\n"
             "- No 5º dia útil, a escala deixa o menor número possível de folgas.\n"
-            "- De segunda a sexta, a pessoa repete o mesmo turno sempre que der."
+            "- De segunda a sexta, a pessoa repete o mesmo turno sempre que der.\n"
+            "- Feriado usa o mínimo do domingo. Quem trabalha nele folga um dia a mais na 3ª semana."
         )
+        feriados = feriados_no_mes(ano, mes)
+        if feriados:
+            st.sidebar.caption("Feriados neste mês")
+            for dia, nome in feriados:
+                st.sidebar.markdown(f"- **{dia.strftime('%d/%m')}** — {nome}")
+            fraca = semana_fraca(ano, mes)
+            if fraca is not None:
+                st.sidebar.caption(
+                    "A folga extra de quem trabalhar no feriado cai entre "
+                    f"{fraca[0].strftime('%d/%m')} e {fraca[6].strftime('%d/%m')}."
+                )
+        else:
+            st.sidebar.caption("Este mês não tem feriado nacional nem de Belo Horizonte.")
 
     return {
         "id_loja": id_loja,

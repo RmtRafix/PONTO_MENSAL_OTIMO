@@ -23,7 +23,7 @@ def _foto(parametros):
 
 
 def _diferente(foto, parametros):
-    return any(foto[chave] != parametros[chave] for chave in foto)
+    return any(foto.get(chave) != parametros[chave] for chave in parametros)
 
 
 def _nome_padrao(indice):
@@ -78,10 +78,11 @@ parametros = painel_loja(mensal=True)
 
 st.caption(
     "Cada linha é um balconista e cada coluna é um dia do mês. "
-    "Domingo fica vermelho, sábado em azul escuro e o 5º dia útil em âmbar. "
+    "Domingo e feriado ficam vermelhos, sábado em azul escuro e o 5º dia útil em âmbar. "
     "F é folga. T1, T2 e T3 são os turnos da legenda. "
     "Ninguém fica com mais de duas folgas seguidas. "
     "De segunda a sexta, cada pessoa repete o mesmo turno sempre que der. "
+    "Quem trabalha no feriado ganha uma folga a mais na 3ª semana. "
     "O dia e o turno de pico vêm da curva de vendas e ficam travados na barra lateral."
 )
 

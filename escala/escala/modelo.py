@@ -4,6 +4,8 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 from ortools.sat.python import cp_model
 
+from feriados import feriados_no_mes
+
 
 DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 TURNOS = ['T1', 'T2', 'T3']
@@ -256,14 +258,16 @@ def gerar_escala_filial(id_loja, classificacao, qtd_balconistas, min_simultaneos
 
 
 def quinto_dia_util(ano, mes):
+    feriados = {dia for dia, _nome in feriados_no_mes(ano, mes)}
     uteis = 0
     ultimo = calendar.monthrange(ano, mes)[1]
     for dia in range(1, ultimo + 1):
         data = date(ano, mes, dia)
-        if data.weekday() < 5:
-            uteis += 1
-            if uteis == 5:
-                return data
+        if data.weekday() >= 5 or data in feriados:
+            continue
+        uteis += 1
+        if uteis == 5:
+            return data
     return None
 
 
@@ -278,6 +282,20 @@ def _semanas_do_mes(ano, mes):
         semanas.append([cursor + timedelta(days=i) for i in range(7)])
         cursor += timedelta(days=7)
     return semanas
+
+
+def semana_fraca(ano, mes):
+    # A 3ª semana de vendas: a terceira segunda-feira que cai dentro do mês, até o domingo.
+    candidatas = [
+        semana
+        for semana in _semanas_do_mes(ano, mes)
+        if semana[0].year == ano and semana[0].month == mes
+    ]
+    if not candidatas:
+        return None
+    if len(candidatas) >= 3:
+        return candidatas[2]
+    return candidatas[-1]
 
 
 def _codigo_dia(solver, x, balconista, dia):
@@ -311,6 +329,17 @@ def gerar_escala_mensal(
     semanas = _semanas_do_mes(ano, mes)
     indice_pico = DIAS_SEMANA.index(dia_pico)
     minimo_pico = min_simultaneos_domingo if dia_pico == 'Domingo' else min_simultaneos
+    feriados_mes = {dia for dia, _nome in feriados_no_mes(ano, mes)}
+    feriados_abertos = [
+        dia
+        for dia in datas
+        if dia in feriados_mes and horarios_loja[DIAS_SEMANA[dia.weekday()]] is not None
+    ]
+    dias_fracos = []
+    semana_da_folga = semana_fraca(ano, mes)
+    if semana_da_folga is not None:
+        dias_fracos = [dia for dia in semana_da_folga if dia in no_mes]
+    folga_extra = len(dias_fracos) == 7 and bool(feriados_abertos)
 
     model = cp_model.CpModel()
     x = {}
@@ -333,7 +362,12 @@ def gerar_escala_mensal(
                 for turno in TURNOS:
                     model.Add(x[(balconista, dia, turno)] == 0)
             continue
-        minimo_dia = min_simultaneos_domingo if nome == 'Domingo' else min_simultaneos
+        if dia in feriados_mes:
+            minimo_dia = min_simultaneos_domingo if domingo_aberto else min_simultaneos
+        elif nome == 'Domingo':
+            minimo_dia = min_simultaneos_domingo
+        else:
+            minimo_dia = min_simultaneos
         if expediente_tem_um_turno(horario[0], horario[1]):
             model.Add(sum(x[(b, dia, 'T1')] for b in balconistas) >= minimo_dia)
             model.Add(sum(x[(b, dia, 'T2')] for b in balconistas) == 0)
@@ -346,10 +380,30 @@ def gerar_escala_mensal(
         dias_semana = [dia for dia in semana if dia in no_mes]
         if len(dias_semana) != 7:
             continue
+        if folga_extra and dias_semana == dias_fracos:
+            continue
         for balconista in balconistas:
             model.Add(
                 sum(x[(balconista, dia, turno)] for dia in dias_semana for turno in TURNOS) == 5
             )
+
+    if folga_extra:
+        for balconista in balconistas:
+            trabalhos = [
+                sum(x[(balconista, dia, turno)] for turno in TURNOS)
+                for dia in feriados_abertos
+            ]
+            trabalhou = model.NewBoolVar(f"trabalhou_feriado_{balconista}")
+            model.Add(sum(trabalhos) >= 1).OnlyEnforceIf(trabalhou)
+            model.Add(sum(trabalhos) == 0).OnlyEnforceIf(trabalhou.Not())
+            soma = sum(
+                x[(balconista, dia, turno)]
+                for dia in dias_fracos
+                for turno in TURNOS
+            )
+            # Uma folga a mais na semana fraca, mesmo que a pessoa tenha trabalhado dois feriados.
+            model.Add(soma == 4).OnlyEnforceIf(trabalhou)
+            model.Add(soma == 5).OnlyEnforceIf(trabalhou.Not())
 
     def pessoas_no_dia(dia):
         return sum(x[(b, dia, t)] for b in balconistas for t in TURNOS)
@@ -360,7 +414,7 @@ def gerar_escala_mensal(
     for semana in semanas:
         dias_semana = [dia for dia in semana if dia in no_mes]
         dia_do_pico = next((dia for dia in dias_semana if dia.weekday() == indice_pico), None)
-        if dia_do_pico is None:
+        if dia_do_pico is None or dia_do_pico in feriados_mes:
             continue
         no_pico = pessoas_no_dia(dia_do_pico)
         model.Add(no_pico >= 2 * minimo_pico)
@@ -511,8 +565,8 @@ def gerar_escala_mensal(
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise ValueError(
             f"Inviável matematicamente. Com {qtd_balconistas} balconistas, "
-            "a cobertura, a escala 5x2, o dia de pico, as 11 horas de descanso "
-            "ou o limite de duas folgas seguidas não fecham."
+            "a cobertura, a escala 5x2, o dia de pico, as 11 horas de descanso, "
+            "o limite de duas folgas seguidas ou a folga extra do feriado não fecham."
         )
 
     linhas = []
