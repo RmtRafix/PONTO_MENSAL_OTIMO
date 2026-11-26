@@ -145,8 +145,9 @@ Só no mês:
 3. Duas folgas seguidas, preferência. O solver reduz a quantidade desses pares ao mínimo que as regras duras permitem. Não zera se a cobertura impedir. Sábado com domingo só fica junto quando a cobertura exige.
 4. Fim de semana, preferência. Evita a mesma pessoa de folga em dois fins de semana seguidos e tenta revezar. Não trava a escala. Loja fechada no domingo: domingo é folga de todo mundo e a troca fica no sábado. Loja aberta: folga de fim de semana significa sábado e domingo sem trabalho.
 5. 5º dia útil do mês, preferência. Conta só segunda a sexta e pula feriado. O solver reduz a folga nesse dia ao mínimo que as regras duras permitem. Pode zerar se couber. Não é restrição dura.
-6. Mesmo turno de segunda a sexta, preferência. Dentro de cada semana, a pessoa repete T1, T2 ou T3 nos dias úteis em que trabalha. Folga no meio não conta como troca. Sábado e domingo ficam de fora. Se a cobertura ou as 11 horas impedirem, a troca continua possível. Não há escolha de turno por pessoa na tabela.
-7. Feriado, duro na cobertura e na folga extra. A base está em `feriados.py`: nacionais e, em Belo Horizonte, Corpus Christi, 15 de agosto e 8 de dezembro. Carnaval, cinzas e vésperas não entram. O feriado fica aberto no horário do dia da semana e usa o mínimo de domingo; se a loja não abre domingo, usa o mínimo de segunda a sábado. Quem trabalha pelo menos um feriado do mês faz 4 turnos, e não 5, na 3ª semana. Essa semana é a da terceira segunda-feira do mês até o domingo. Dois feriados no mês dão uma folga extra, não duas. O dia de pico que cai no feriado não puxa gente além dessa cobertura.
+6. Mesmo turno de segunda a sexta, preferência, quando o travamento está em semanal. Dentro de cada semana, a pessoa repete T1, T2 ou T3 nos dias úteis em que trabalha. Folga no meio não conta como troca. Sábado e domingo ficam de fora. Se a cobertura ou as 11 horas impedirem, a troca continua possível. Não há escolha de turno por pessoa na tabela.
+7. Turno travado no mês, duro, quando o travamento está em mensal. A pessoa usa um turno só em todos os dias que trabalha, inclusive sábado e domingo. O solver escolhe qual turno. Dia curto só tem T1: quem ficou em T2 ou T3 folga nesse dia. A preferência semanal não entra nesse modo, porque o mês já segura o turno.
+8. Feriado, duro na cobertura e na folga extra. A base está em `feriados.py`: nacionais e, em Belo Horizonte, Corpus Christi, 15 de agosto e 8 de dezembro. Carnaval, cinzas e vésperas não entram. O feriado fica aberto no horário do dia da semana e usa o mínimo de domingo; se a loja não abre domingo, usa o mínimo de segunda a sábado. Quem trabalha pelo menos um feriado do mês faz 4 turnos, e não 5, na 3ª semana. Essa semana é a da terceira segunda-feira do mês até o domingo. Dois feriados no mês dão uma folga extra, não duas. O dia de pico que cai no feriado não puxa gente além dessa cobertura.
 
 Pesos do `Minimize` mensal, para não inverter a prioridade sem querer:
 
@@ -160,13 +161,13 @@ Pesos do `Minimize` mensal, para não inverter a prioridade sem querer:
 | Cada folga de fim de semana | −30 |
 | Teto de folgas de fim de semana por pessoa | +5 |
 | Pessoas no 5º dia útil | −1500 |
-| Cada turno diferente usado de segunda a sexta | +400 |
+| Cada turno diferente usado de segunda a sexta | +400, só no travamento semanal |
 
 O solver mensal tem limite de 30 segundos. Se estourar, a tela pede para gerar de novo.
 
 ## Tela do mês
 
-Uma grade só. Linha = balconista. Coluna = dia 1…N. Célula curta: `T1`, `T2`, `T3` ou `F`. Acima da grade, a tabela da equipe só tem o nome. A sidebar lista o teto de duas folgas seguidas, a preferência de reduzir esse par e os feriados do mês.
+Uma grade só. Linha = balconista. Coluna = dia 1…N. Célula curta: `T1`, `T2`, `T3` ou `F`. Acima da grade, a tabela da equipe só tem o nome. A sidebar lista o teto de duas folgas seguidas, a preferência de reduzir esse par, os feriados do mês e o travamento da escala. O padrão é semanal. Mensal prende o turno o mês inteiro.
 
 O cabeçalho tem duas linhas. A de cima é o dia da semana, em `Seg`, `Ter`, `Qua`, `Qui`, `Sex`, `Sáb` e `Dom`. A de baixo é o número do dia. As duas usam a mesma cor: dia de semana azul (`#173989`), sábado azul escuro (`#112B67`), domingo e feriado vermelhos (`#D0261E`), 5º dia útil âmbar (`#FFF0DB`). O horário de cada turno continua na legenda da sidebar, porque a coluna do dia não cabe o texto `06:00 às 15:24`. O nome do feriado aparece ao passar o mouse no dia.
 
@@ -175,7 +176,7 @@ T1 em azul bem claro (`#E6F4FB`), T2 em azul claro (`#DCE5F9`), T3 no azul fecha
 ## O que não fazer sem combinar
 
 - Não instalar stack nova.
-- Não transformar a preferência de fim de semana, do 5º dia útil, do turno repetido ou de zerar o par de duas folgas seguidas em restrição dura. Foram pedidas como “quando der”. O teto de duas folgas seguidas é que é duro. A folga extra de quem trabalha no feriado também é dura: 4 turnos na 3ª semana.
+- Não transformar a preferência de fim de semana, do 5º dia útil, do turno repetido na semana ou de zerar o par de duas folgas seguidas em restrição dura. Foram pedidas como “quando der”. O teto de duas folgas seguidas é que é duro. A folga extra de quem trabalha no feriado também é dura: 4 turnos na 3ª semana. O turno do mês inteiro só é duro quando o parâmetro está em travar escala mensal.
 - Não recolocar a escolha de turno por pessoa na tabela. Essa opção foi retirada.
 - Não exigir T2 em todo dia. Ele não cobre abertura nem fechamento, e no domingo curto está desligado de propósito.
 - Não tratar carnaval, quarta de cinzas nem véspera de Natal ou Ano Novo como feriado. Não dar uma folga extra por feriado: o mês dá uma, para quem trabalhou pelo menos um. Não modelar o intervalo dentro do turno. O nome na grade é só rótulo: o solver continua em `Balconista_1` ….

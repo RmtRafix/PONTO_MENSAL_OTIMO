@@ -28,6 +28,10 @@ OPCOES_TURNO = {
     "T3 (Fechamento)": "T3",
 }
 ROTULO_TURNO = {codigo: rotulo for rotulo, codigo in OPCOES_TURNO.items()}
+OPCOES_TRAVA = {
+    "Travar escala semanal": "semanal",
+    "Travar escala mensal": "mensal",
+}
 LOGO_DROGA_CLARA = Path(__file__).resolve().parent / "assets" / "logo_completo.png"
 
 
@@ -153,6 +157,19 @@ def painel_loja(mensal=False):
             "Mês", MESES, index=hoje.month - 1, key="mes_escala", persist_state="session"
         )
         mes = MESES.index(mes) + 1
+        rotulo_trava = st.sidebar.selectbox(
+            "Travamento da escala",
+            list(OPCOES_TRAVA),
+            key="travar_escala",
+            persist_state="session",
+            help=(
+                "Semanal: de segunda a sexta o turno não muda dentro da semana "
+                "e pode mudar na semana seguinte. "
+                "Mensal: o turno que a pessoa fizer vale o mês inteiro, "
+                "inclusive sábado e domingo."
+            ),
+        )
+        travar = OPCOES_TRAVA[rotulo_trava]
         st.sidebar.caption("Regras extras do mês")
         st.sidebar.markdown(
             "- Entre o fim de um turno e o início do próximo, pelo menos 11 horas.\n"
@@ -161,7 +178,7 @@ def painel_loja(mensal=False):
             "- A folga de fim de semana reveza quando der. Não trava a escala.\n"
             "- Domingo fechado é folga de todo mundo; a troca fica no sábado.\n"
             "- No 5º dia útil, a escala deixa o menor número possível de folgas.\n"
-            "- De segunda a sexta, a pessoa repete o mesmo turno sempre que der.\n"
+            "- Semanal: de segunda a sexta o turno se repete dentro da semana. Mensal: o mesmo turno vale o mês inteiro.\n"
             "- Feriado usa o mínimo do domingo. Quem trabalha nele folga um dia a mais na 3ª semana."
         )
         feriados = feriados_no_mes(ano, mes)
@@ -189,4 +206,5 @@ def painel_loja(mensal=False):
         "referencia": referencia,
         "ano": ano,
         "mes": mes,
+        "travar": travar if mensal else None,
     }

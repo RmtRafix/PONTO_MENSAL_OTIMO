@@ -19,6 +19,7 @@ def _foto(parametros):
         "turno_pico": parametros["turno_pico"],
         "ano": parametros["ano"],
         "mes": parametros["mes"],
+        "travar": parametros["travar"],
     }
 
 
@@ -82,6 +83,7 @@ st.caption(
     "F é folga. T1, T2 e T3 são os turnos da legenda. "
     "Ninguém fica com mais de duas folgas seguidas. "
     "De segunda a sexta, cada pessoa repete o mesmo turno sempre que der. "
+    "No travamento mensal, esse turno vale o mês inteiro. "
     "Quem trabalha no feriado ganha uma folga a mais na 3ª semana. "
     "O dia e o turno de pico vêm da curva de vendas e ficam travados na barra lateral."
 )
@@ -166,6 +168,7 @@ if gerar:
                 parametros["turno_pico"],
                 parametros["ano"],
                 parametros["mes"],
+                parametros["travar"],
             )
             st.session_state["escala_gerada"] = {
                 "parametros": _foto(parametros),

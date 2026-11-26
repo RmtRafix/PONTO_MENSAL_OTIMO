@@ -315,7 +315,10 @@ def gerar_escala_mensal(
     turno_pico,
     ano,
     mes,
+    travar="semanal",
 ):
+    if travar not in ("semanal", "mensal"):
+        raise ValueError("O travamento da escala é semanal ou mensal.")
     horarios_loja = decodificar_classificacao(classificacao)
     balconistas = [f'Balconista_{i}' for i in range(1, qtd_balconistas + 1)]
     domingo_aberto = validar_parametros(
@@ -514,19 +517,37 @@ def gerar_escala_mensal(
             if folgas:
                 model.Add(sum(folgas) <= teto_folga)
 
-    # De segunda a sexta, cada pessoa fica o máximo possível no mesmo turno.
+    # Semanal: de segunda a sexta o turno se repete dentro da semana, quando der.
+    # Mensal: o turno que a pessoa fizer vale todos os dias do mês.
     escalas_usadas = []
-    for indice_semana, semana in enumerate(semanas):
-        dias_uteis = [dia for dia in semana[:5] if dia in no_mes]
-        if len(dias_uteis) < 2:
-            continue
+    if travar == "mensal":
         for balconista in balconistas:
+            usos = []
             for turno in TURNOS:
-                usa = model.NewBoolVar(f"usa_{balconista}_{indice_semana}_{turno}")
-                model.AddMaxEquality(
-                    usa, [x[(balconista, dia, turno)] for dia in dias_uteis]
-                )
-                escalas_usadas.append(usa)
+                trabalhos = [
+                    x[(balconista, dia, turno)]
+                    for dia in datas
+                    if horarios_loja[DIAS_SEMANA[dia.weekday()]] is not None
+                ]
+                usa = model.NewBoolVar(f"trava_mes_{balconista}_{turno}")
+                if trabalhos:
+                    model.AddMaxEquality(usa, trabalhos)
+                else:
+                    model.Add(usa == 0)
+                usos.append(usa)
+            model.Add(sum(usos) <= 1)
+    else:
+        for indice_semana, semana in enumerate(semanas):
+            dias_uteis = [dia for dia in semana[:5] if dia in no_mes]
+            if len(dias_uteis) < 2:
+                continue
+            for balconista in balconistas:
+                for turno in TURNOS:
+                    usa = model.NewBoolVar(f"usa_{balconista}_{indice_semana}_{turno}")
+                    model.AddMaxEquality(
+                        usa, [x[(balconista, dia, turno)] for dia in dias_uteis]
+                    )
+                    escalas_usadas.append(usa)
 
     objetivo = 0
     if picos:
@@ -566,7 +587,8 @@ def gerar_escala_mensal(
         raise ValueError(
             f"Inviável matematicamente. Com {qtd_balconistas} balconistas, "
             "a cobertura, a escala 5x2, o dia de pico, as 11 horas de descanso, "
-            "o limite de duas folgas seguidas ou a folga extra do feriado não fecham."
+            "o limite de duas folgas seguidas, a folga extra do feriado "
+            "ou o turno travado no mês não fecham."
         )
 
     linhas = []
